@@ -7,11 +7,7 @@ from langchain.chains import RetrievalQA
 from langchain.agents import Tool
 from langchain.agents import initialize_agent
 
-TEXT_FIELD = "text"
-OPENAI_API_KEY = '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'
-YOUR_API_KEY = '5cf20be0-6e9f-47ef-bef3-ffcd57011ab0'
-YOUR_ENV = 'asia-southeast1-gcp-free'
-INDEX_NAME = 'admission'
+
 
 embed = OpenAIEmbeddings(
     # model=MODEL_NAME,
