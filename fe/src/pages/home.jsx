@@ -1,0 +1,102 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useContext, useEffect, useMemo, useState } from "react";
+import Sidebar from "../components/sidebar";
+import { twMerge } from "tailwind-merge";
+import { GlobalContext } from "../context";
+import ScrollToBottom from "react-scroll-to-bottom";
+
+const Home = () => {
+  const { auth, socket, chats } = useContext(GlobalContext);
+  const [content, setContent] = useState("");
+  const [target, setTarget] = useState(null);
+
+  useEffect(() => {
+    if (target) {
+      socket.emit("get_messages", { in: target });
+    }
+  }, [target]);
+
+  const messages = useMemo(
+    () => chats?.find((item) => item?._id === target)?.messages || [],
+    [chats, target]
+  );
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      socket.emit("new_message", {
+        user_id: auth?._id,
+        content,
+        type: "user",
+        in: target,
+      });
+      setContent("");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return (
+    <div className="flex h-screen">
+      <div className="w-72">
+        <Sidebar onSelectChat={(id) => setTarget(id)} />
+      </div>
+      <div className="w-[calc(100%-288px)] relative">
+        <div className="h-full w-full pb-14 p-2">
+          <ScrollToBottom className="h-full">
+            {messages.map((item) => (
+              <div
+                key={item._id}
+                className={twMerge(
+                  "max-w-[50%] bg-primary-500 mb-2 rounded-md text-white p-2",
+                  item.user_id === auth?._id &&
+                    item.type === "user" &&
+                    "ml-auto text-black bg-white border-2"
+                )}
+              >
+                {item.content}
+              </div>
+            ))}
+          </ScrollToBottom>
+        </div>
+        <div className="absolute bottom-0 w-full">
+          <div className="">
+            <form>
+              <label htmlFor="chat" className="sr-only">
+                Your message
+              </label>
+              <div className="flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <textarea
+                  id="chat"
+                  rows="1"
+                  className="block mx-4 p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Your message..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                ></textarea>
+                <button
+                  type="submit"
+                  className="inline-flex justify-center p-2 text-blue-600 rounded-full cursor-pointer hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600"
+                  onClick={handleSubmit}
+                >
+                  <svg
+                    className="w-5 h-5 rotate-90 rtl:-rotate-90"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    viewBox="0 0 18 20"
+                  >
+                    <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" />
+                  </svg>
+                  <span className="sr-only">Send message</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;
